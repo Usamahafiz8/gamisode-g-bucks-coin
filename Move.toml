@@ -1,0 +1,19 @@
+[package]
+name = "first-coin"
+version = "0.0.1"
+authors = ["Muhammad Osama (usamahafiz8@gmail.com)"]  
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
+MoveStdlib = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/move-stdlib", rev = "framework/testnet" }
+
+[addresses]
+g_bucks = "0x0"
+
+
+
+
+
+
+
+
