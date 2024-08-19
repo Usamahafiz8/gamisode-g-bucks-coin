@@ -4,90 +4,82 @@ module g_bucks::coin {
     use sui::transfer;
     use sui::tx_context::{Self as tx_context, TxContext};
     use sui::object::{Self as sui_object, UID};
-    // use sui::token::{Self}
     
-    // The main struct representing the G-Bucks coin.
+    /// The main struct representing the G-Bucks coin.
     struct COIN has drop {}
 
-    // The TransferCap struct is used to control and authorize the transfer of G-Bucks coins.
+    /// The TransferCap struct is used to control and authorize the transfer of G-Bucks coins.
     struct TransferCap has key {
         id: UID,
     }
 
-
-// token::newpolicy <transty cap> {token policy and } new_policy
-// NEW POLICY FOR THE transfer  
-// close loop token >>  new policy >> transfer policy actions ...
-
-    // Initializes the G-Bucks coin, creates the necessary capabilities,
-    // and transfers them to the transaction sender.
+    /// Initializes the G-Bucks coin by creating the necessary capabilities
+    /// and transferring them to the transaction sender.
+    ///
+    /// # Arguments
+    /// * `witness` - A witness to create the G-Bucks coin.
+    /// * `ctx` - The mutable reference to the transaction context.
     fun init(witness: COIN, ctx: &mut TxContext) {
+        // Create the currency with the specified details and mint 1 unit initially.
         let (treasury_cap, metadata) = coin::create_currency<COIN>(
             witness,                               
             1,                                     
             b"G-Bucks",                            
             b"Gamisode Bucks",                     
-            b"the Coins for the Gamisodes Platform", 
+            b"The Coins for the Gamisodes Platform", 
             option::none(),                        
             ctx                                    
         );
 
+        // Create a TransferCap to authorize and control the transfer of G-Bucks.
         let transfer_cap = TransferCap {
             id: sui_object::new(ctx),        
         };
-        transfer ::transfer(transfer_cap,tx_context::sender(ctx)); // granting the ability to authorize and control the transfer of G-Bucks coins.
-        transfer::public_freeze_object(metadata); // Freezing the metadata to prevent further changes
-        transfer::public_transfer(treasury_cap, tx_context::sender(ctx)); // Transferring the treasury capability to the transaction sender
+        
+        // Grant the TransferCap to the transaction sender.
+        transfer::transfer(transfer_cap, tx_context::sender(ctx));
+
+        // Freeze the metadata to prevent further changes.
+        transfer::public_freeze_object(metadata);
+        
+        // Transfer the TreasuryCap to the transaction sender.
+        transfer::public_transfer(treasury_cap, tx_context::sender(ctx));
     }
 
-    // public entry fun mint(
-    //     _transfer_cap: &mut TransferCap,
-    //     treasury_cap: &mut TreasuryCap<COIN>, // The mutable reference to the treasury capability for COIN
-        
-    //     amount: u64,                          // The amount of G-Bucks to mint
-    //     ctx: &mut TxContext                   // The transaction context
-    // ) {
-    //     let minted_coins = coin::mint(treasury_cap, amount, ctx);
-    //     transfer::public_transfer(minted_coins, tx_context::sender(ctx));
-    // }
-
-
-
-    // public entry fun transfer(
-    //     _transfer_cap: &mut TransferCap,
-    //     coin: Coin<COIN>,
-    //     recipient: address,
-    //     ctx: &mut TxContext
-    // ) {
-    //     let owner_obj = tx_context::sender(ctx); // Retrieve the owner's address
-
-    //     // Ensure that only the owner can call this function
-    //     assert!(tx_context::sender(ctx) == owner_obj, 0x1);
-
-    //     transfer::public_transfer(coin, recipient);
-    // }
-
+    /// Mints a specified amount of G-Bucks and transfers them to a recipient.
+    ///
+    /// # Arguments
+    /// * `_transfer_cap` - The mutable reference to the TransferCap.
+    /// * `treasury_cap` - The mutable reference to the TreasuryCap for COIN.
+    /// * `amount` - The amount of G-Bucks to mint and transfer.
+    /// * `recipient` - The recipient's address.
+    /// * `ctx` - The mutable reference to the transaction context.
     public entry fun mint_and_transfer(
         _transfer_cap: &mut TransferCap,
-        treasury_cap: &mut TreasuryCap<COIN>, // The mutable reference to the treasury capability for COIN
-        amount: u64,                          // The amount to mint and transfer
-        recipient: address,                   // The recipient's address
-        ctx: &mut TxContext                   // The transaction context
+        treasury_cap: &mut TreasuryCap<COIN>,
+        amount: u64,
+        recipient: address,
+        ctx: &mut TxContext
     ) {
+        // Mint the specified amount of G-Bucks.
         let minted_coins = coin::mint(treasury_cap, amount, ctx);
+        
+        // Transfer the minted coins to the recipient.
         transfer::public_transfer(minted_coins, recipient);
     }
 
-
-
-
-    /// Function to spend G-Bucks by destroying the coin
+    /// Spends G-Bucks by burning the specified coin.
+    ///
+    /// # Arguments
+    /// * `treasury_cap` - The mutable reference to the TreasuryCap for COIN.
+    /// * `coin` - The coin to be spent (burned).
+    /// * `_ctx` - The mutable reference to the transaction context (currently unused).
     public fun spend(
         treasury_cap: &mut TreasuryCap<COIN>,
-        coin: Coin<COIN>,       // The coin to be spent
-        _ctx: &mut TxContext     // The transaction context (currently unused)
+        coin: Coin<COIN>,
+        _ctx: &mut TxContext
     ) {
-        // Destroy the coin (spend it)
+        // Burn the specified coin to spend it.
         coin::burn(treasury_cap, coin);
     }
 }
